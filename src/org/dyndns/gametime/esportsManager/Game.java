@@ -23,7 +23,7 @@ public class Game {
 		Player.loadConfig();
 	}
 
-	public Team getCurrentTeam() throws Exception {
+	public Team getCurrentTeam(){
 		return currentTeam;
 	}
 
@@ -32,6 +32,7 @@ public class Game {
 	}
 	
 	public void doPlayerAction(Player p, PlayerAction pa){
+		//TODO: finish player actions
 		switch(pa){
 		case STREAM:
 			//Magic numbers: assuming games run from 15-60minutes, the minimum for a 4 hour span is 4 games, the max for 8 hours is 32.
@@ -47,6 +48,16 @@ public class Game {
 				}
 			}
 			System.out.println(p);
+		case DAYOFF:
+			break;
+		case LADDER:
+			break;
+		case OTHERGAME:
+			break;
+		case SCRIM:
+			break;
+		default:
+			break;
 			
 		}
 	}

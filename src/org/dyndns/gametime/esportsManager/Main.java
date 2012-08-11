@@ -1,8 +1,5 @@
 package org.dyndns.gametime.esportsManager;
 
-import java.util.ArrayList;
-
-import org.dyndns.gametime.esportsManager.Game.DailyQueue;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
@@ -10,34 +7,21 @@ import org.lwjgl.opengl.GL11;
 import test.TestUtils;
 
 import de.matthiasmann.twl.Button;
-import de.matthiasmann.twl.Container;
-import de.matthiasmann.twl.EditField;
-import de.matthiasmann.twl.FPSCounter;
 import de.matthiasmann.twl.GUI;
 import de.matthiasmann.twl.Event;
 import de.matthiasmann.twl.Label;
 import de.matthiasmann.twl.Menu;
 import de.matthiasmann.twl.ProgressBar;
-import de.matthiasmann.twl.RadialPopupMenu;
 import de.matthiasmann.twl.ResizableFrame;
-import de.matthiasmann.twl.ResizableFrame.ResizableAxis;
 import de.matthiasmann.twl.ScrollPane;
-import de.matthiasmann.twl.TabbedPane;
 import de.matthiasmann.twl.Table;
+import de.matthiasmann.twl.TableRowSelectionManager;
+import de.matthiasmann.twl.ResizableFrame.ResizableAxis;
 import de.matthiasmann.twl.Timer;
-import de.matthiasmann.twl.ToggleButton;
-import de.matthiasmann.twl.WheelWidget;
 import de.matthiasmann.twl.Widget;
-import de.matthiasmann.twl.model.SimpleChangableListModel;
 import de.matthiasmann.twl.model.SimpleTableModel;
-import de.matthiasmann.twl.renderer.Image;
-import de.matthiasmann.twl.renderer.Renderer;
-import de.matthiasmann.twl.renderer.Texture;
-import de.matthiasmann.twl.renderer.lwjgl.LWJGLDynamicImage;
 import de.matthiasmann.twl.renderer.lwjgl.LWJGLRenderer;
-import de.matthiasmann.twl.theme.GridImage;
 import de.matthiasmann.twl.theme.ThemeManager;
-import java.util.Calendar;
 
 public class Main extends Widget{
 	
@@ -75,7 +59,7 @@ public class Main extends Widget{
 	private Game game;
 	public boolean quit;
 	private MainMenu mainmenu;
-	private TeamScreen teamscreen;
+	private HomeScreen homescreen;
 	private ResizableFrame frame;
 	private Team playerteam;
 	
@@ -84,18 +68,12 @@ public class Main extends Widget{
 		game.setCurrentTeam(Team.randomTeamFromCountry("us"));
 		
 		mainmenu = new MainMenu();
-		try {
-			playerteam = game.getCurrentTeam();
-			teamscreen = new TeamScreen(playerteam);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		playerteam = game.getCurrentTeam();
+		homescreen = new HomeScreen(playerteam);
 		
 		frame = new ResizableFrame();
 		frame.setResizableAxis(ResizableAxis.NONE);
 		frame.add(mainmenu);
-		
 		add(frame);
 	}
 
@@ -125,7 +103,7 @@ public class Main extends Widget{
 				@Override
 				public void run() {
 					// TODO Auto-generated method stub
-					switchTo(teamscreen);
+					switchTo(homescreen);
 				}
     			
     		});
@@ -152,13 +130,15 @@ public class Main extends Widget{
 
     }
     
-    class TeamScreen extends Widget implements Refreshable {
+    class HomeScreen extends Widget implements Refreshable {
     	private ProgressBar prog_bar;
     	
     	private Button btn1;
     	private Button btn2;
     	private Button inc_spd;
     	private Button dec_spd;
+    	private Button begin_day;
+    	private Button pause_day;
     	
     	private Label team1;
     	private Label lbl_speed;
@@ -171,12 +151,11 @@ public class Main extends Widget{
     	private int speed = 0;
     	private Timer timer;
     	
-    	public TeamScreen(Team team){
+    	public HomeScreen(Team team){
     		/*-----------------------------
     		 * Progress bar
     		 ------------------------------*/
     		prog_bar = new ProgressBar();
-    		prog_bar.setSize(100, 20);
     		
     		/*-----------------------------
     		 * Label for progress bar speed
@@ -215,16 +194,42 @@ public class Main extends Widget{
 				public void run() {
 					// TODO Auto-generated method stub
 					game.setCurrentTeam(Team.randomTeamFromCountry("us"));
-					try {
-						playerteam = game.getCurrentTeam();
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					playerteam = game.getCurrentTeam();
 					//teamscreen = new TeamScreen(playerteam);
-					switchTo(teamscreen);
+					switchTo(homescreen);
 				}
     		});
+    		
+    		/*------------------
+    		 * Begin day button
+    		 -------------------*/
+    		
+    		begin_day = new Button();
+    		begin_day.setTheme("button");
+    		begin_day.setText("Begin Day [>");
+    		begin_day.addCallback(new Runnable(){
+				@Override
+				public void run() {
+					timer.start();					
+				}
+    			
+    		});
+    		
+    		/*------------------
+    		 * Pause day button
+    		 -------------------*/
+    		
+    		pause_day = new Button();
+    		pause_day.setTheme("button");
+    		pause_day.setText("Pause Day ||");
+    		pause_day.addCallback(new Runnable(){
+				@Override
+				public void run() {
+					timer.stop();					
+				}
+    			
+    		});
+    		
     		
     		/*-----------------------------
     		 * Increase progress bar speed ( + )
@@ -265,16 +270,13 @@ public class Main extends Widget{
     		
     		team1 = new Label();
     		teamtable = new TeamTable(playerteam);
-    		try {
-				team1.setText(game.getCurrentTeam().toString());
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			team1.setText(game.getCurrentTeam().toString());
     		
     		add(prog_bar);
     		add(btn1);
     		add(btn2);
+    		add(begin_day);
+    		add(pause_day);
     		add(inc_spd);
     		add(dec_spd);
     		add(lbl_speed);
@@ -288,24 +290,26 @@ public class Main extends Widget{
 		 ------------------------------*/
     	@Override
     	protected void afterAddToGUI(GUI gui){
-    	timer = new Timer(gui);
-		timer.setDelay(delay);
-		timer.setCallback(new Runnable(){
-			@Override
-			public void run() {
-				time += .01f;
-				System.out.println(time);
-				if( time >= 1 ){
-					game.calendar.addDay();
-		    		lbl_date.setText( game.calendar.toString() );
-					time = 0;
+	    	timer = new Timer(gui);
+			timer.setDelay(delay);
+			timer.setCallback(new Runnable(){
+				@Override
+				public void run() {
+					time += .01f;
+					System.out.println(time);
+					if( time >= 1 ){
+						game.calendar.addDay();
+			    		lbl_date.setText( game.calendar.toString() );
+						time = 0;
+						timer.stop();
+						prog_bar.setValue(time);
+					}else{
+						prog_bar.setValue(time);
+					}
+					
 				}
-				prog_bar.setValue(time);
-			}
-		});
-		timer.start();	
-		timer.setContinuous(true);
-
+			});
+			timer.setContinuous(true);
     	}
     	
     	@Override
@@ -319,6 +323,9 @@ public class Main extends Widget{
     		inc_spd.adjustSize();
     		dec_spd.adjustSize();
     		prog_bar.adjustSize();
+    		begin_day.adjustSize();
+    		pause_day.adjustSize();
+    		prog_bar.setSize(140, 35);
     		
     		/*-----------------------------
     		 * Set position of GUI objects
@@ -327,6 +334,8 @@ public class Main extends Widget{
     		inc_spd.setPosition(prog_bar.getX() - 30, prog_bar.getY());
     		dec_spd.setPosition(prog_bar.getRight() + 10, prog_bar.getY());
     		btn2.setPosition(btn1.getRight() + 10, btn1.getY());
+    		begin_day.setPosition(btn2.getRight() + 10, btn1.getY());
+    		pause_day.setPosition(begin_day.getRight() + 10, btn1.getY());
     		lbl_speed.setPosition(prog_bar.getX() + (prog_bar.getWidth()/2) - 2, prog_bar.getY() + prog_bar.getHeight() + 10 );
         	lbl_date.setPosition(prog_bar.getX() + (prog_bar.getWidth()/2) - (lbl_date.getWidth()/2), prog_bar.getY() - 20 );
     		
@@ -337,15 +346,90 @@ public class Main extends Widget{
 
 		public void refresh() {
     		teamtable.setTeam(playerteam);
-    		try {
-				team1.setText(playerteam.toString());
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			team1.setText(playerteam.toString());
 		}
+		
+		class TeamTable extends Widget{
+	    	private final Table playerTable;
+	    	public final SimpleTableModel tablemod;
+	    	private final ScrollPane tablePane;
+
+	    	public TeamTable(Team team){		
+	    		tablePane = new ScrollPane();
+	    		tablePane.setFixed(ScrollPane.Fixed.HORIZONTAL);
+
+	    		String[] headers = {"First", "Last", "Gamertag", "Happy", "XP"};
+	    		tablemod = new SimpleTableModel(headers);
+	    		playerTable = new Table(tablemod);
+	    		//playerTable.setDefaultSelectionManager();
+	    		playerTable.setSelectionManager(new RclickTableRowSelectionManager());
+
+	    		tablePane.setContent(playerTable);
+
+	    		add(tablePane);
+
+	    		for(Player p : team.players()){
+	    			tablemod.addRow((Object[])p.tableForm());
+	    		}
+	    	}
+
+	    	public void setTeam(Team t){
+	    		if(tablemod.getNumRows() > 0){
+	    			tablemod.deleteRows(0, tablemod.getNumRows());
+	    		}
+	    		for(Player p : t.players()){
+	    			tablemod.addRow((Object[])p.tableForm());
+	    		}
+	    	}
+
+	    	@Override
+	    	protected void layout() {
+	    		tablePane.setSize(getInnerWidth(), getInnerHeight());
+	    	}
+
+	    	class RclickTableRowSelectionManager extends TableRowSelectionManager {
+	    		@Override
+	    		public boolean handleMouseEvent(int row, int column, Event event) {
+	    			// TODO Auto-generated method stub
+	    			switch (event.getType()) {
+	    			case MOUSE_BTNDOWN:
+	    				if(event.getMouseButton() == Event.MOUSE_RBUTTON) {
+	    					System.out.println("rbtn");
+	    					Menu pop = createPlayerMenu(game.getCurrentTeam().players().get(row));
+	    					//TODO: is there a better way to store the players to figure out who is clicked on?
+	    					System.out.println(row + " " + column);
+	    					System.out.println(game.getCurrentTeam().players().get(row).toString());
+	    					pop.openPopupMenu(playerTable, event.getMouseX(), event.getMouseY());
+	    				}
+	    				break;
+	    			default:
+	    				break;
+	    			}
+	    			return super.handleMouseEvent(row, column, event);
+	    		}
+
+	    		private Menu createPlayerMenu(Player player) {
+	    			Menu menu = new Menu();
+	    			menu.add(player.firstname + " " + player.lastname, new Runnable(){
+	    				@Override
+	    				public void run() {
+	    					// TODO Auto-generated method stub
+
+	    				}});
+	    			menu.add("Herp", new Runnable(){
+	    				@Override
+	    				public void run() {
+	    					// TODO Auto-generated method stub
+	    					System.out.println("menu");
+
+	    				}
+	    			});
+	    			System.out.println("ok");
+	    			return menu;
+	    		}
+	    	}
+	    }
     }
-	
 	@Override
 	protected void layout() {
 		super.layout();
@@ -365,6 +449,8 @@ public class Main extends Widget{
 				quit = true;
 				return true;
 			}
+			break;
+		default:
 			break;
 		}
 		return evt.isMouseEventNoWheel();

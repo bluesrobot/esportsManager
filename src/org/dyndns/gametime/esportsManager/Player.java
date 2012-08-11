@@ -179,16 +179,19 @@ public class Player {
 						line = line.trim();
 						firstnamesList.get(c).add(line);
 					}
+					fnconfiguration.close();
 					BufferedReader lnconfiguration = new BufferedReader(new FileReader(lnFile));
 					while ((line = lnconfiguration.readLine()) != null) {
 						line = line.trim();
 						lastnamesList.get(c).add(line);
 					}
+					lnconfiguration.close();
 					BufferedReader ctconfiguration = new BufferedReader(new FileReader(ctFile));
 					while ((line = ctconfiguration.readLine()) != null) {
 						line = line.trim();
 						citiesList.get(c).add(line);
 					}
+					ctconfiguration.close();
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -205,6 +208,7 @@ public class Player {
 				line = line.trim();
 				gamertags.add(line);
 			}
+			gtconfiguration.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
