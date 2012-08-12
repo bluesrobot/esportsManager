@@ -31,37 +31,6 @@ import de.matthiasmann.twl.theme.ThemeManager;
 
 public class Main extends Widget{
 
-	public static void main(String[] args) {
-		try {
-			Display.setDisplayMode(new DisplayMode(1600, 900));
-			Display.create();
-			Display.setTitle("TWL Game UI Demo");
-			Display.setVSyncEnabled(true);
-
-			LWJGLRenderer renderer = new LWJGLRenderer();
-			Main main = new Main();
-			GUI gui = new GUI(main, renderer);
-
-			ThemeManager theme = ThemeManager.createThemeManager(
-					Main.class.getResource("/theme/simple.xml"), renderer);
-			gui.applyTheme(theme);
-
-			while(!Display.isCloseRequested() && !main.quit) {
-				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-				gui.update();
-				Display.update();
-				TestUtils.reduceInputLag();
-			}
-
-			gui.destroy();
-			theme.destroy();
-		} catch (Exception ex) {
-			//ex.printStackTrace();
-			TestUtils.showErrMsg(ex);
-		}
-		Display.destroy();
-	}
-
 	private Game game;
 	public boolean quit;
 	private MainMenu mainmenu;
@@ -71,7 +40,7 @@ public class Main extends Widget{
 
 	public Main() {		
 		game = new Game();
-		game.setCurrentTeam(Team.randomTeamFromCountry("us"));
+		game.setCurrentTeam(Team.randomTeam());
 
 		mainmenu = new MainMenu();
 		playerteam = game.getCurrentTeam();
@@ -108,7 +77,6 @@ public class Main extends Widget{
 			btn1.addCallback(new Runnable(){
 				@Override
 				public void run() {
-					// TODO Auto-generated method stub
 					switchTo(homescreen);
 				}
 
@@ -184,7 +152,6 @@ public class Main extends Widget{
 			btn1.addCallback(new Runnable(){
 				@Override
 				public void run() {
-					// TODO Auto-generated method stub
 					switchTo(mainmenu);
 				}
 			});
@@ -198,8 +165,7 @@ public class Main extends Widget{
 			btn2.addCallback(new Runnable(){
 				@Override
 				public void run() {
-					// TODO Auto-generated method stub
-					game.setCurrentTeam(Team.randomTeamFromCountry("us"));
+					game.setCurrentTeam(Team.randomTeam());
 					playerteam = game.getCurrentTeam();
 					//teamscreen = new TeamScreen(playerteam);
 					switchTo(homescreen);
@@ -346,8 +312,8 @@ public class Main extends Widget{
 			lbl_date.setPosition(prog_bar.getX() + (prog_bar.getWidth()/2) - (lbl_date.getWidth()/2), prog_bar.getY() - 20 );
 
 			team1.setPosition(0, btn1.getBottom() + 10);
-			teamtable.setPosition(0, team1.getBottom() + 10);
 			teamtable.setSize(600, 600);
+			teamtable.setPosition(getWidth() - teamtable.getWidth() - 10, 10);
 		}
 
 		public void refresh() {
@@ -414,19 +380,16 @@ public class Main extends Widget{
 
 				@Override
 				public int getColumnSpan() {
-					// TODO Auto-generated method stub
 					return 1;
 				}
 
 				@Override
 				public int getPreferredHeight() {
-					// TODO Auto-generated method stub
 					return 50;
 				}
 
 				@Override
 				public Widget getCellRenderWidget(int x, int y, int w,int h, boolean isSelected) {
-					// TODO Auto-generated method stub
 					pc.setPosition(x, y);
 					pc.setSize(w, h);
 					return pc;
@@ -434,13 +397,13 @@ public class Main extends Widget{
 
 				@Override
 				public void setCellData(int row, int column, Object data) {
-					// TODO Auto-generated method stub
-					//System.out.println(data);
 					pc.setPlayer((Player) data);
 				}
 			}
 
-			//Controls the layout of each cell item.
+			/*--------------------------------------
+			 * Controls the layout of each cell item.
+			 -------------------------------------*/
 			class PlayerCell extends Widget{
 				Label name;
 				Label stats;
@@ -453,10 +416,10 @@ public class Main extends Widget{
 				}
 
 				public void setPlayer(Player p){
-					name.setText(p.firstname + " \"" + p.gamertag + "\" " + p.lastname);
-					stats.setText("XP: " + p.exp + " Happy: " + p.happy + " Viewers: " + p.viewers);
+					name.setText(p.getNameWithGamertag());
+					stats.setText("XP: " + p.getExp() + " Happy: " + p.getHappy() + " Viewers: " + p.getViewers());
 				}
-				
+
 				@Override
 				protected void layout(){
 					//name.setPosition(0, 0);
@@ -464,8 +427,8 @@ public class Main extends Widget{
 					//setSize(50, 100);
 					name.adjustSize();
 					stats.adjustSize();
-					//list cells may be rendered offscreen, getY from the table pane
-					name.setPosition(10, getY() + 10);
+					name.setPosition(getX() + 10, getY() + 10);
+					//System.out.println(this.toString() + " W=" + getWidth() + " H=" + getHeight() + " X=" + getX() + " Y=" + getY() + " NX=" + name.getX() + " NY=" + name.getY());
 					stats.setPosition(getRight() - stats.getWidth() - 10, getBottom() - stats.getHeight() - 10);
 				}
 			}
@@ -473,16 +436,17 @@ public class Main extends Widget{
 			class RclickTableRowSelectionManager extends TableRowSelectionManager {
 				@Override
 				public boolean handleMouseEvent(int row, int column, Event event) {
-					// TODO Auto-generated method stub
 					switch (event.getType()) {
 					case MOUSE_BTNDOWN:
 						if(event.getMouseButton() == Event.MOUSE_RBUTTON) {
 							System.out.println("rbtn");
-							Menu pop = createPlayerMenu(game.getCurrentTeam().players().get(row));
-							//TODO: is there a better way to store the players to figure out who is clicked on?
-							System.out.println(row + " " + column);
-							System.out.println(game.getCurrentTeam().players().get(row).toString());
-							pop.openPopupMenu(playerTable, event.getMouseX(), event.getMouseY());
+							if(row < game.getCurrentTeam().players().size()){
+								Menu pop = createPlayerMenu(game.getCurrentTeam().players().get(row));
+								//TODO: is there a better way to store the players to figure out who is clicked on?
+								System.out.println(row + " " + column);
+								System.out.println(game.getCurrentTeam().players().get(row).toString());
+								pop.openPopupMenu(playerTable, event.getMouseX(), event.getMouseY());
+							}
 						}
 						break;
 					default:
@@ -491,28 +455,70 @@ public class Main extends Widget{
 					return super.handleMouseEvent(row, column, event);
 				}
 
-				private Menu createPlayerMenu(Player player) {
+				private Menu createPlayerMenu(final Player player) {
 					Menu menu = new Menu();
-					menu.add(player.firstname + " " + player.lastname, new Runnable(){
+					menu.add(player.getFullname(), new Runnable(){
 						@Override
 						public void run() {
-							// TODO Auto-generated method stub
-
+							switchTo(new PlayerScreen(player));
 						}});
-					menu.add("Herp", new Runnable(){
-						@Override
-						public void run() {
-							// TODO Auto-generated method stub
-							System.out.println("menu");
-
-						}
-					});
 					System.out.println("ok");
 					return menu;
 				}
 			}
 		}
 	}
+
+	class PlayerScreen extends Widget implements Refreshable{
+		
+		private Label name;
+		private Label stats;
+		private Button btn_back;
+		
+		
+		public PlayerScreen(Player p){
+			name = new Label();
+			name.setText(p.getNameWithGamertag());
+			
+			stats = new Label();
+			stats.setText("from " + p.getCity() + ", " + p.getCountryName() + "\nAge: " + p.getAge());
+			
+			btn_back = new Button();
+			btn_back.setText("<< Back");
+			btn_back.addCallback(new Runnable(){
+
+				@Override
+				public void run() {
+					switchTo(homescreen);	
+				}
+				
+			});
+			
+			
+			add(name);
+			add(stats);
+			add(btn_back);
+		}
+		
+		@Override
+		protected void layout(){
+			name.adjustSize();
+			stats.adjustSize();
+			btn_back.adjustSize();
+			
+			btn_back.setPosition(10, 10);
+			name.setPosition(btn_back.getX(), btn_back.getBottom() + 10);
+			stats.setPosition(btn_back.getX(), name.getBottom() + 10);
+		}
+		
+		@Override
+		public void refresh() {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
 	@Override
 	protected void layout() {
 		super.layout();
@@ -537,5 +543,36 @@ public class Main extends Widget{
 			break;
 		}
 		return evt.isMouseEventNoWheel();
+	}
+
+	public static void main(String[] args) {
+		try {
+			Display.setDisplayMode(new DisplayMode(1600, 900));
+			Display.create();
+			Display.setTitle("TWL Game UI Demo");
+			Display.setVSyncEnabled(true);
+
+			LWJGLRenderer renderer = new LWJGLRenderer();
+			Main main = new Main();
+			GUI gui = new GUI(main, renderer);
+
+			ThemeManager theme = ThemeManager.createThemeManager(
+					Main.class.getResource("/theme/simple.xml"), renderer);
+			gui.applyTheme(theme);
+
+			while(!Display.isCloseRequested() && !main.quit) {
+				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+				gui.update();
+				Display.update();
+				TestUtils.reduceInputLag();
+			}
+
+			gui.destroy();
+			theme.destroy();
+		} catch (Exception ex) {
+			//ex.printStackTrace();
+			TestUtils.showErrMsg(ex);
+		}
+		Display.destroy();
 	}
 }

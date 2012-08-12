@@ -11,16 +11,104 @@ import java.util.List;
 import java.util.Random;
 
 public class Player {
-	String firstname;
-	String lastname;
-	int age;
-	String gamertag;
-	String city;
-	String countrycode;
-	int exp;
-	int viewers;
-	double happy;	
+	private String firstname;
+	private String lastname;
+	private int age;
+	private String gamertag;
+	private String city;
+	private String countrycode;
+	private int exp;
+	private int viewers;
+	private double happy;	
 	
+	/*
+	 * Generated getters and setters
+	 */
+	
+	public String getFirstname() {
+		return firstname;
+	}
+
+	public void setFirstname(String firstname) {
+		this.firstname = firstname;
+	}
+
+	public String getLastname() {
+		return lastname;
+	}
+
+	public void setLastname(String lastname) {
+		this.lastname = lastname;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
+	}
+
+	public String getGamertag() {
+		return gamertag;
+	}
+
+	public void setGamertag(String gamertag) {
+		this.gamertag = gamertag;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getCountrycode() {
+		return countrycode;
+	}
+
+	public void setCountrycode(String countrycode) {
+		this.countrycode = countrycode;
+	}
+
+	public int getExp() {
+		return exp;
+	}
+
+	public void setExp(int exp) {
+		this.exp = exp;
+	}
+
+	public int getViewers() {
+		return viewers;
+	}
+
+	public void setViewers(int viewers) {
+		this.viewers = viewers;
+	}
+
+	public double getHappy() {
+		return happy;
+	}
+
+	public void setHappy(double happy) {
+		this.happy = happy;
+	}
+	
+	public String getFullname(){
+		return firstname + " " + lastname;
+	}
+	
+	public String getNameWithGamertag(){
+		return firstname + " \"" + gamertag + "\" " + lastname;
+	}
+	
+	public String getCountryName(){
+		return getCountryByCode(countrycode);
+	}
+
 	public Player(String firstname, String lastname, int age, String gamertag,
 			String city, String countrycode, int exp, int viewers, double happy) {
 		super();
